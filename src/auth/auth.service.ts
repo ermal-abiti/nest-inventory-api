@@ -31,7 +31,7 @@ export class AuthService {
     }
 
     // Generate token
-    const token = sign({ email: user.email }, 'secret key');
+    const token = sign({ email: user.email }, process.env.JWT_SECRET || 'secret key');
     const response: TokenDto = { token };
 
     return response;
@@ -44,7 +44,7 @@ export class AuthService {
     newUser.password = await bcrypt.hash(newUser.password, 12);
 
     // Generate token
-    const token = sign({ email: newUser.email }, 'secret key');
+    const token = sign({ email: newUser.email }, process.env.JWT_SECRET || 'secret key');
     const response: TokenDto = { token };
 
     await newUser.save();

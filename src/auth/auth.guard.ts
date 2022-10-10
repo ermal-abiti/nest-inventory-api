@@ -28,7 +28,7 @@ export class AuthGuard implements CanActivate {
     let decoded: any;
 
     try {
-      decoded = jwt.verify(token, 'secret key');
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret key');
     } catch (error) {
       throw new ForbiddenException('not authenticated');
     }
