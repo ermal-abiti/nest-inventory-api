@@ -1,5 +1,6 @@
-import { Controller, Get, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { CreateItemDto } from './dtos/create-item.dto';
 import { ItemService } from './item.service';
 
 @Controller('items')
@@ -8,7 +9,14 @@ export class ItemController {
 
     @Get()
     @UseGuards(AuthGuard)
-    async getUserItems(@Request() request: any) {
+    getUserItems(@Request() request: any) {
         return this.itemService.getItems(request.user.email);
+    }
+
+    @Post()
+    @UseGuards(AuthGuard)
+    addUserItem(@Request() request: any, @Body() body: CreateItemDto) {
+        body.creator = request.user._id;
+        return this.itemService.addItem(body);
     }
 }
