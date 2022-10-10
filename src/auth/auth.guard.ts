@@ -1,17 +1,42 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
+import * as jwt from 'jsonwebtoken';
+import { InjectModel } from '@nestjs/mongoose';
+import { User } from './schemas/user.schema';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+  constructor(@InjectModel(User.name) private userModel: any) {}
+
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
-    let auth = request.headers.authorization;
-    if (!auth) {
+    let token = request.headers.authorization;
+
+    if (!token) {
       throw new ForbiddenException('not authenticated');
     }
-    
-    return true
+
+    let decoded: any;
+
+    try {
+      decoded = jwt.verify(token, 'secret key');
+    } catch (error) {
+      throw new ForbiddenException('not authenticated');
+    }
+
+    request.user = this.userModel.findOne({ username: decoded.username });
+
+    if (!request.user) {
+      throw new ForbiddenException('not authenticated')
+    }
+    return true;
   }
 }

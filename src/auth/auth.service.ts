@@ -2,17 +2,18 @@ import { ForbiddenException, Inject, Injectable, Scope } from '@nestjs/common';
 import { LoginDto } from './dtos/login.dto';
 import { RegisterDto } from './dtos/register.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from './schemas/user.schema';
-import { Model } from 'mongoose';
+import { User } from './schemas/user.schema';
 import { TokenDto } from './dtos/token.dto';
 import * as bcrypt from 'bcrypt';
 import { sign } from 'jsonwebtoken';
 import { REQUEST } from '@nestjs/core';
-import { Request } from 'express'; 
+import { Request } from 'express';
+
+export type RequestWithUser = Request & { user: User };
 
 @Injectable({ scope: Scope.REQUEST })
 export class AuthService {
-  constructor(@InjectModel(User.name) private userModel: any, @Inject(REQUEST) private readonly request: any) {}
+  constructor(@InjectModel(User.name) private userModel: any, @Inject(REQUEST) private readonly request: RequestWithUser) {}
 
   async login(data: LoginDto) {
     let user = await this.userModel.findOne({ email: data.email });
