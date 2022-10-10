@@ -9,10 +9,11 @@ import { Observable } from 'rxjs';
 import * as jwt from 'jsonwebtoken';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(@InjectModel(User.name) private userModel: any) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   canActivate(
     context: ExecutionContext,
@@ -32,11 +33,14 @@ export class AuthGuard implements CanActivate {
       throw new ForbiddenException('not authenticated');
     }
 
-    request.user = this.userModel.findOne({ username: decoded.username });
-
-    if (!request.user) {
-      throw new ForbiddenException('not authenticated')
-    }
-    return true;
+    return this.userModel
+      .findOne({ username: decoded.username })
+      .then((data) => {
+        request.user = data;
+        return true;
+      })
+      .catch((error) => {
+        throw new ForbiddenException('not authenticated');
+      });
   }
 }

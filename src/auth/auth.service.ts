@@ -8,16 +8,20 @@ import * as bcrypt from 'bcrypt';
 import { sign } from 'jsonwebtoken';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
+import { Model } from 'mongoose';
 
 export type RequestWithUser = Request & { user: User };
 
 @Injectable({ scope: Scope.REQUEST })
 export class AuthService {
-  constructor(@InjectModel(User.name) private userModel: any, @Inject(REQUEST) private readonly request: RequestWithUser) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    @Inject(REQUEST) private readonly request: RequestWithUser,
+  ) {}
 
   async login(data: LoginDto) {
     let user = await this.userModel.findOne({ email: data.email });
-    
+
     if (!user) {
       throw new ForbiddenException('invalid credentials');
     }
@@ -27,7 +31,7 @@ export class AuthService {
     }
 
     // Generate token
-    const token = sign({email: user.email}, 'secret key');
+    const token = sign({ email: user.email }, 'secret key');
     const response: TokenDto = { token };
 
     return response;
@@ -38,7 +42,7 @@ export class AuthService {
 
     // Hash Password
     newUser.password = await bcrypt.hash(newUser.password, 12);
-    
+
     // Generate token
     const token = sign({ email: newUser.email }, 'secret key');
     const response: TokenDto = { token };
@@ -49,6 +53,6 @@ export class AuthService {
   }
 
   async getAuthUser() {
-      return this.request.user;
+    return this.request.user;
   }
 }
